@@ -7,6 +7,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.smartcanteen.data.FirestoreCanteenRepository
 import com.example.smartcanteen.ui.theme.SmartCanteenTheme
 
 class MainActivity : ComponentActivity() {
@@ -14,7 +15,12 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            val viewModel: CanteenViewModel = viewModel()
+            // Using OOP: Injecting the repository into the ViewModel via a Factory
+            val repository = FirestoreCanteenRepository()
+            val viewModel: CanteenViewModel = viewModel(
+                factory = CanteenViewModel.Factory(application, repository)
+            )
+
             val themeMode by viewModel.themeMode.collectAsState()
             
             SmartCanteenTheme(themeMode = themeMode) {

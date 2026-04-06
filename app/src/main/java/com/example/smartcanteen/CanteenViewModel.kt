@@ -4,19 +4,26 @@ import android.app.Application
 import android.util.Log
 import android.widget.Toast
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.smartcanteen.data.*
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
-
-//try
 enum class ThemeMode {
     AUTO, LIGHT, DARK
 }
 
-class CanteenViewModel(application: Application) : AndroidViewModel(application) {
-    private val repository = CanteenRepository()
+/**
+ * CanteenViewModel follows OOP principles by using Dependency Injection.
+ * It depends on the CanteenRepository interface rather than a concrete implementation.
+ */
+class CanteenViewModel(
+    application: Application,
+    private val repository: CanteenRepository
+) : AndroidViewModel(application) {
+
     val allItems: StateFlow<List<FoodItem>>
     val allSales: StateFlow<List<Sale>>
     
@@ -188,6 +195,22 @@ class CanteenViewModel(application: Application) : AndroidViewModel(application)
                 Log.e("CanteenApp", "Sale Error", e)
                 Toast.makeText(getApplication(), "Sale Failed: ${e.message}", Toast.LENGTH_LONG).show()
             }
+        }
+    }
+
+    /**
+     * Factory class to create the ViewModel with a repository instance.
+     */
+    class Factory(
+        private val application: Application,
+        private val repository: CanteenRepository
+    ) : ViewModelProvider.Factory {
+        override fun <T : ViewModel> create(modelClass: Class<T>): T {
+            if (modelClass.isAssignableFrom(CanteenViewModel::class.java)) {
+                @Suppress("UNCHECKED_CAST")
+                return CanteenViewModel(application, repository) as T
+            }
+            throw IllegalArgumentException("Unknown ViewModel class")
         }
     }
 }
