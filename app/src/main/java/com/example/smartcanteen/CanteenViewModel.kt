@@ -9,6 +9,8 @@ import com.example.smartcanteen.data.*
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
+
+//try
 enum class ThemeMode {
     AUTO, LIGHT, DARK
 }
