@@ -19,6 +19,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.smartcanteen.ui.theme.CanteenOrangeLight
 
 @Composable
 fun LoginScreen(onLogin: (String, String, (Boolean) -> Unit) -> Unit) {
@@ -47,7 +48,7 @@ fun LoginScreen(onLogin: (String, String, (Boolean) -> Unit) -> Unit) {
                 Surface(
                     modifier = Modifier.size(90.dp),
                     shape = CircleShape,
-                    color = MaterialTheme.colorScheme.primaryContainer
+                    color = CanteenOrangeLight
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(Icons.Default.Restaurant, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(45.dp))
