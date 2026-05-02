@@ -8,8 +8,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.smartcanteen.data.*
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 class CanteenViewModel(
     application: Application,
@@ -38,27 +40,55 @@ class CanteenViewModel(
             .onEach { Log.d("CanteenApp", "Sales updated: ${it.size}") }
             .catch { e -> Log.e("CanteenApp", "Error fetching sales", e) }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-        
-        viewModelScope.launch {
-            repository.allStockRecords
-                .catch { e -> Log.e("CanteenApp", "Error fetching stock records", e) }
-                .collect { _stockRecords.value = it }
-        }
 
         viewModelScope.launch {
-            repository.allUsers
-                .catch { e -> Log.e("CanteenApp", "Error fetching users", e) }
-                .collect { _allUsers.value = it }
-        }
-        
-        viewModelScope.launch {
             try {
-                val existingAdmin = repository.getUserByUsername("admin")
-                if (existingAdmin == null) {
-                    repository.insertUser(User(username = "admin", password = "admin123", role = "ADMIN"))
+                // 1. Attempt to ensure we have a Firebase session
+                try {
+                    if (FirebaseAuth.getInstance().currentUser == null) {
+                        Log.d("CanteenApp", "Attempting anonymous sign-in...")
+                        FirebaseAuth.getInstance().signInAnonymously().await()
+                        Log.d("CanteenApp", "Anonymous sign-in successful")
+                    }
+                } catch (authEx: Exception) {
+                    Log.e("CanteenApp", "Anonymous Auth Failed. Make sure it's enabled in Firebase Console.", authEx)
+                }
+
+                // 2. Start listeners (even if auth failed, we try in case rules are public)
+                launch {
+                    repository.allStockRecords
+                        .catch { e -> 
+                            Log.e("CanteenApp", "Error fetching stock records", e)
+                            if (e.message?.contains("PERMISSION_DENIED") == true) {
+                                // Specific log for user
+                                Log.e("CanteenApp", "CRITICAL: Firestore Rules are blocking access.")
+                            }
+                        }
+                        .collect { _stockRecords.value = it }
+                }
+
+                launch {
+                    repository.allUsers
+                        .catch { e -> Log.e("CanteenApp", "Error fetching users", e) }
+                        .collect { _allUsers.value = it }
+                }
+
+                // 3. Initialize default accounts if needed
+                try {
+                    val admin = repository.getUserByUsername("admin")
+                    if (admin == null) {
+                        repository.insertUser(User(username = "admin", password = "admin123", role = "ADMIN"))
+                    }
+
+                    val staff = repository.getUserByUsername("staff")
+                    if (staff == null) {
+                        repository.insertUser(User(username = "staff", password = "staff123", role = "STAFF"))
+                    }
+                } catch (dbEx: Exception) {
+                    Log.e("CanteenApp", "Database init failed - check Firestore Rules", dbEx)
                 }
             } catch (e: Exception) {
-                Log.e("CanteenApp", "Error initializing admin", e)
+                Log.e("CanteenApp", "General error during initialization", e)
             }
         }
     }
@@ -66,7 +96,8 @@ class CanteenViewModel(
     fun login(username: String, password: String, onResult: (Boolean) -> Unit) {
         viewModelScope.launch {
             try {
-                val user = repository.getUserByUsername(username)
+                val trimmedUsername = username.trim()
+                val user = repository.getUserByUsername(trimmedUsername)
                 if (user != null && user.password == password) {
                     _currentUser.value = user
                     onResult(true)
@@ -75,7 +106,12 @@ class CanteenViewModel(
                 }
             } catch (e: Exception) {
                 Log.e("CanteenApp", "Login Error", e)
-                Toast.makeText(getApplication(), "Login Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                val errorMessage = e.message ?: "Unknown error"
+                if (errorMessage.contains("PERMISSION_DENIED", ignoreCase = true)) {
+                    Toast.makeText(getApplication(), "Database Permission Error. Please check Firebase Rules.", Toast.LENGTH_LONG).show()
+                } else {
+                    Toast.makeText(getApplication(), "Login Error: $errorMessage", Toast.LENGTH_SHORT).show()
+                }
                 onResult(false)
             }
         }
