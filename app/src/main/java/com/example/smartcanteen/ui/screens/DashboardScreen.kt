@@ -42,11 +42,7 @@ fun DashboardScreen(viewModel: CanteenViewModel) {
         .mapValues { entry -> entry.value.sumOf { it.quantitySold } }
         .toList().sortedByDescending { it.second }.take(3)
 
-    Box(modifier = Modifier.fillMaxSize().background(
-        Brush.verticalGradient(
-            listOf(Color.White, Color(0xFFFFF3E0).copy(alpha = 0.5f))
-        )
-    )) {
+    Box(modifier = Modifier.fillMaxSize()) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(24.dp),
@@ -55,14 +51,14 @@ fun DashboardScreen(viewModel: CanteenViewModel) {
             item {
                 Column {
                     Text(
-                        "Insights",
+                        "Analytics",
                         style = MaterialTheme.typography.displaySmall,
                         fontWeight = FontWeight.Black,
                         letterSpacing = (-1).sp,
                         color = MaterialTheme.colorScheme.onBackground
                     )
                     Text(
-                        "Track your canteen performance",
+                        "Overview of your canteen's performance",
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
                     )
@@ -73,19 +69,19 @@ fun DashboardScreen(viewModel: CanteenViewModel) {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                     StatCard(
                         Modifier.weight(1f),
-                        "Active Items",
+                        "Total Menu",
                         items.size.toString(),
                         Icons.Outlined.Inventory2,
-                        Color(0xFFE3F2FD),
-                        Color(0xFF1976D2)
+                        MaterialTheme.colorScheme.primaryContainer,
+                        MaterialTheme.colorScheme.onPrimaryContainer
                     )
                     StatCard(
                         Modifier.weight(1f),
-                        "Stock Alerts",
+                        "Low Stock",
                         lowStockItems.size.toString(),
                         Icons.Outlined.Notifications,
-                        if (lowStockItems.isNotEmpty()) StatusColors.RedBg else Color(0xFFE8F5E9),
-                        if (lowStockItems.isNotEmpty()) StatusColors.RedText else Color(0xFF2E7D32)
+                        if (lowStockItems.isNotEmpty()) StatusColors.RedBg else MaterialTheme.colorScheme.secondaryContainer,
+                        if (lowStockItems.isNotEmpty()) StatusColors.RedText else MaterialTheme.colorScheme.onSecondaryContainer
                     )
                 }
             }
@@ -93,13 +89,13 @@ fun DashboardScreen(viewModel: CanteenViewModel) {
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     Text(
-                        "Revenue Trend",
+                        "Sales Trend",
                         fontWeight = FontWeight.Black,
                         style = MaterialTheme.typography.titleLarge,
                         letterSpacing = (-0.5).sp
                     )
                     Surface(
-                        modifier = Modifier.shadow(8.dp, RoundedCornerShape(32.dp)),
+                        modifier = Modifier.shadow(12.dp, RoundedCornerShape(32.dp)),
                         shape = RoundedCornerShape(32.dp),
                         color = Color.White
                     ) {
@@ -114,7 +110,7 @@ fun DashboardScreen(viewModel: CanteenViewModel) {
                         Icon(Icons.Default.Warning, contentDescription = null, tint = StatusColors.Red, modifier = Modifier.size(20.dp))
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            "Critical Stock",
+                            "Attention Required",
                             color = StatusColors.RedText,
                             fontWeight = FontWeight.Black,
                             style = MaterialTheme.typography.titleLarge
@@ -149,7 +145,7 @@ fun DashboardScreen(viewModel: CanteenViewModel) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(item.name, fontWeight = FontWeight.Bold, fontSize = 16.sp)
                                 Text(
-                                    if (isOutOfStock) "Out of Stock" else "${item.currentStock} remaining",
+                                    if (isOutOfStock) "Out of Stock" else "Only ${item.currentStock} left in inventory",
                                     fontSize = 12.sp,
                                     color = if (isOutOfStock) StatusColors.RedText else StatusColors.OrangeText
                                 )
@@ -161,7 +157,7 @@ fun DashboardScreen(viewModel: CanteenViewModel) {
 
             item {
                 Text(
-                    "Popular This Week",
+                    "Top Sellers",
                     fontWeight = FontWeight.Black,
                     style = MaterialTheme.typography.titleLarge,
                     letterSpacing = (-0.5).sp
@@ -169,7 +165,7 @@ fun DashboardScreen(viewModel: CanteenViewModel) {
             }
 
             if (topItems.isEmpty()) {
-                item { EmptyState(Icons.Default.History, "No sales recorded yet") }
+                item { EmptyState(Icons.Default.History, "No sales data available yet") }
             } else {
                 items(topItems.size) { index ->
                     val (name, qty) = topItems[index]
@@ -210,7 +206,7 @@ fun DashboardScreen(viewModel: CanteenViewModel) {
                                 shape = RoundedCornerShape(12.dp)
                             ) {
                                 Text(
-                                    "$qty orders",
+                                    "$qty sold",
                                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                                     color = GradientEnd,
                                     fontWeight = FontWeight.Black,

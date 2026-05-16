@@ -45,44 +45,49 @@ fun LoginScreen(onLogin: (String, String, (Boolean) -> Unit) -> Unit) {
             .statusBarsPadding(),
         contentAlignment = Alignment.Center
     ) {
-        // Decorative floating circles
+        // Decorative background elements
         Box(
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .offset(x = 60.dp, y = (-40).dp)
-                .size(240.dp)
-                .background(Color.White.copy(alpha = 0.1f), CircleShape)
+                .offset(x = 60.dp, y = (-60).dp)
+                .size(300.dp)
+                .background(Color.White.copy(alpha = 0.12f), CircleShape)
         )
         
         Box(
             modifier = Modifier
                 .align(Alignment.BottomStart)
                 .offset(x = (-80).dp, y = 80.dp)
-                .size(300.dp)
+                .size(340.dp)
                 .background(Color.White.copy(alpha = 0.1f), CircleShape)
         )
 
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(32.dp),
+                .padding(horizontal = 32.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Surface(
                 modifier = Modifier
                     .size(110.dp)
-                    .shadow(16.dp, CircleShape),
+                    .shadow(24.dp, CircleShape),
                 shape = CircleShape,
                 color = Color.White
             ) {
-                Box(contentAlignment = Alignment.Center) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
                     Image(
-                        painter = painterResource(id = R.mipmap.ic_launcher_foreground),
-                        contentDescription = "App Icon",
+                        painter = painterResource(id = R.drawable.ic_launcher_foreground),
+                        contentDescription = "App Logo",
                         modifier = Modifier
-                            .size(110.dp)
+                            .size(90.dp)
                             .clip(CircleShape)
-                            .background(Color(0xFF3DDC84)) // Typical Android green background for the launcher icon
+                            .background(
+                                Brush.linearGradient(listOf(Color(0xFF66BB6A), Color(0xFF43A047)))
+                            )
                     )
                 }
             }
@@ -91,27 +96,42 @@ fun LoginScreen(onLogin: (String, String, (Boolean) -> Unit) -> Unit) {
             
             Text(
                 "SmartCanteen",
-                fontSize = 40.sp,
+                fontSize = 44.sp,
                 fontWeight = FontWeight.Black,
                 letterSpacing = (-1.5).sp,
                 color = Color.White
             )
             
             Text(
-                "Management System",
-                color = Color.White.copy(alpha = 0.8f),
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Medium
+                "Efficient • Modern • Reliable",
+                color = Color.White.copy(alpha = 0.85f),
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 1.sp
             )
             
             Spacer(modifier = Modifier.height(48.dp))
             
             Surface(
-                modifier = Modifier.fillMaxWidth().shadow(24.dp, RoundedCornerShape(32.dp)),
+                modifier = Modifier.fillMaxWidth().shadow(40.dp, RoundedCornerShape(32.dp)),
                 shape = RoundedCornerShape(32.dp),
                 color = Color.White
             ) {
                 Column(modifier = Modifier.padding(28.dp)) {
+                    Text(
+                        "Sign In to Portal",
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Black,
+                        color = Color(0xFF2D2D2D)
+                    )
+                    Text(
+                        "Enter credentials to access your dashboard",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.Gray
+                    )
+                    
+                    Spacer(modifier = Modifier.height(24.dp))
+
                     OutlinedTextField(
                         value = username,
                         onValueChange = { username = it; loginError = null },
@@ -123,8 +143,10 @@ fun LoginScreen(onLogin: (String, String, (Boolean) -> Unit) -> Unit) {
                         singleLine = true,
                         enabled = !isLoggingIn,
                         colors = OutlinedTextFieldDefaults.colors(
-                            unfocusedBorderColor = Color.LightGray.copy(alpha = 0.3f),
-                            focusedBorderColor = GradientEnd
+                            unfocusedBorderColor = Color(0xFFEEEEEE),
+                            focusedBorderColor = GradientEnd,
+                            unfocusedContainerColor = Color(0xFFF9F9F9),
+                            focusedContainerColor = Color.White
                         )
                     )
                     
@@ -142,38 +164,50 @@ fun LoginScreen(onLogin: (String, String, (Boolean) -> Unit) -> Unit) {
                         singleLine = true,
                         enabled = !isLoggingIn,
                         colors = OutlinedTextFieldDefaults.colors(
-                            unfocusedBorderColor = Color.LightGray.copy(alpha = 0.3f),
-                            focusedBorderColor = GradientEnd
+                            unfocusedBorderColor = Color(0xFFEEEEEE),
+                            focusedBorderColor = GradientEnd,
+                            unfocusedContainerColor = Color(0xFFF9F9F9),
+                            focusedContainerColor = Color.White
                         )
                     )
 
                     AnimatedVisibility(visible = loginError != null) {
-                        Text(
-                            text = loginError ?: "",
-                            color = MaterialTheme.colorScheme.error,
-                            fontSize = 12.sp,
-                            modifier = Modifier.padding(top = 8.dp, start = 4.dp),
-                            fontWeight = FontWeight.Bold
-                        )
+                        Surface(
+                            color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.2f),
+                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier.padding(top = 12.dp).fillMaxWidth()
+                        ) {
+                            Text(
+                                text = loginError ?: "",
+                                color = MaterialTheme.colorScheme.error,
+                                fontSize = 12.sp,
+                                modifier = Modifier.padding(8.dp),
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
 
                     Spacer(modifier = Modifier.height(32.dp))
                     
                     Button(
                         onClick = {
+                            if (username.isBlank() || password.isBlank()) {
+                                loginError = "Please fill in all details"
+                                return@Button
+                            }
                             isLoggingIn = true
                             onLogin(username, password) { success ->
                                 if (!success) {
                                     isLoggingIn = false
-                                    loginError = "Invalid credentials. Please try again."
+                                    loginError = "Incorrect credentials"
                                 }
                             }
                         },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(64.dp)
-                            .shadow(8.dp, RoundedCornerShape(20.dp)),
-                        shape = RoundedCornerShape(20.dp),
+                            .height(60.dp)
+                            .shadow(12.dp, RoundedCornerShape(18.dp)),
+                        shape = RoundedCornerShape(18.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = GradientEnd),
                         enabled = !isLoggingIn
                     ) {
@@ -181,7 +215,7 @@ fun LoginScreen(onLogin: (String, String, (Boolean) -> Unit) -> Unit) {
                             CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp), strokeWidth = 3.dp)
                         } else {
                             Text(
-                                "SIGN IN",
+                                "ACCESS SYSTEM",
                                 fontWeight = FontWeight.Black,
                                 letterSpacing = 1.sp,
                                 fontSize = 16.sp
@@ -190,6 +224,15 @@ fun LoginScreen(onLogin: (String, String, (Boolean) -> Unit) -> Unit) {
                     }
                 }
             }
+            
+            Spacer(modifier = Modifier.height(24.dp))
+            Text(
+                "Authorized Access Only",
+                color = Color.White.copy(alpha = 0.7f),
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 0.5.sp
+            )
         }
     }
 }

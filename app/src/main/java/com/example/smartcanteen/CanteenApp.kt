@@ -66,18 +66,24 @@ fun SmartCanteenApp(viewModel: CanteenViewModel) {
                 viewModel.login(username, password, onResult)
             }
         } else {
-            val navItems = mutableListOf(
-                Triple("dashboard", "Home", Icons.Default.GridView),
-                Triple("inventory", "Items", Icons.Default.RestaurantMenu),
-                Triple("sales", "Sale", Icons.Default.PointOfSale),
-                Triple("reports", "Report", Icons.Default.Analytics)
-            )
-
-            if (user.role == "ADMIN") {
-                navItems.add(Triple("users", "Users", Icons.Default.AdminPanelSettings))
+            val navItems = remember {
+                listOf(
+                    Triple("dashboard", "Dashboard", Icons.Default.GridView),
+                    Triple("inventory", "Inventory", Icons.Default.RestaurantMenu),
+                    Triple("sales", "Orders", Icons.Default.PointOfSale),
+                    Triple("reports", "Analytics", Icons.Default.Analytics)
+                )
+            }
+            
+            val finalNavItems = remember(user) {
+                if (user.role == "ADMIN") {
+                    navItems + Triple("users", "Personnel", Icons.Default.AdminPanelSettings)
+                } else {
+                    navItems
+                }
             }
 
-            val pagerState = rememberPagerState(pageCount = { navItems.size })
+            val pagerState = rememberPagerState(pageCount = { finalNavItems.size })
 
             Scaffold(
                 snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -90,7 +96,7 @@ fun SmartCanteenApp(viewModel: CanteenViewModel) {
                     ) {
                         Row(
                             modifier = Modifier
-                                .padding(horizontal = 24.dp, vertical = 16.dp)
+                                .padding(horizontal = 24.dp, vertical = 14.dp)
                                 .fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
@@ -106,7 +112,7 @@ fun SmartCanteenApp(viewModel: CanteenViewModel) {
                                     Spacer(modifier = Modifier.width(16.dp))
                                 } else {
                                     Surface(
-                                        modifier = Modifier.size(48.dp).shadow(4.dp, CircleShape),
+                                        modifier = Modifier.size(40.dp).shadow(4.dp, CircleShape),
                                         shape = CircleShape,
                                         color = Color.White
                                     ) {
@@ -115,22 +121,22 @@ fun SmartCanteenApp(viewModel: CanteenViewModel) {
                                                 user.username.take(1).uppercase(),
                                                 fontWeight = FontWeight.Black,
                                                 color = GradientEnd,
-                                                fontSize = 20.sp
+                                                fontSize = 16.sp
                                             )
                                         }
                                     }
-                                    Spacer(modifier = Modifier.width(16.dp))
+                                    Spacer(modifier = Modifier.width(14.dp))
                                 }
                                 Column {
                                     Text(
                                         "SmartCanteen",
                                         fontWeight = FontWeight.Black,
-                                        fontSize = 18.sp,
+                                        fontSize = 17.sp,
                                         letterSpacing = (-0.5).sp,
                                         color = Color.White
                                     )
                                     Text(
-                                        "Hello, ${user.username}",
+                                        "Session: ${user.username}",
                                         style = MaterialTheme.typography.labelSmall,
                                         color = Color.White.copy(alpha = 0.8f),
                                         fontWeight = FontWeight.Medium
@@ -141,11 +147,11 @@ fun SmartCanteenApp(viewModel: CanteenViewModel) {
                             IconButton(
                                 onClick = { viewModel.logout() },
                                 modifier = Modifier
-                                    .size(40.dp)
+                                    .size(38.dp)
                                     .background(Color.White.copy(alpha = 0.2f), CircleShape)
                                     .clip(CircleShape)
                             ) {
-                                Icon(Icons.Default.Logout, contentDescription = "Logout", tint = Color.White, modifier = Modifier.size(18.dp))
+                                Icon(Icons.Default.Logout, contentDescription = "Logout", tint = Color.White, modifier = Modifier.size(16.dp))
                             }
                         }
                     }
@@ -161,24 +167,24 @@ fun SmartCanteenApp(viewModel: CanteenViewModel) {
                             containerColor = Color.Transparent,
                             modifier = Modifier.navigationBarsPadding()
                         ) {
-                            navItems.forEachIndexed { index, item ->
+                            finalNavItems.forEachIndexed { index, item ->
                                 val isSelected = (currentRoute == "main" || currentRoute == null) && pagerState.currentPage == index
                                 NavigationBarItem(
                                     icon = {
                                         Icon(
                                             imageVector = item.third,
                                             contentDescription = item.second,
-                                            modifier = Modifier.size(26.dp)
+                                            modifier = Modifier.size(24.dp)
                                         )
                                     },
-                                    label = { Text(item.second, fontWeight = FontWeight.Bold) },
+                                    label = { Text(item.second, fontWeight = FontWeight.Bold, fontSize = 10.sp) },
                                     selected = isSelected,
                                     colors = NavigationBarItemDefaults.colors(
                                         selectedIconColor = Color.White,
                                         selectedTextColor = Color.White,
                                         indicatorColor = Color.White.copy(alpha = 0.25f),
-                                        unselectedIconColor = Color.White.copy(alpha = 0.6f),
-                                        unselectedTextColor = Color.White.copy(alpha = 0.6f)
+                                        unselectedIconColor = Color.White.copy(alpha = 0.5f),
+                                        unselectedTextColor = Color.White.copy(alpha = 0.5f)
                                     ),
                                     onClick = {
                                         if (currentRoute != "main") {
@@ -204,7 +210,7 @@ fun SmartCanteenApp(viewModel: CanteenViewModel) {
                         beyondViewportPageCount = 1,
                         userScrollEnabled = currentRoute == "main" || currentRoute == null
                     ) { page ->
-                        when (navItems[page].first) {
+                        when (finalNavItems[page].first) {
                             "dashboard" -> DashboardScreen(viewModel)
                             "inventory" -> InventoryScreen(viewModel)
                             "sales" -> SalesScreen(viewModel)
